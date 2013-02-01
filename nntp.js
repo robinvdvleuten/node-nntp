@@ -1,5 +1,6 @@
-var net = require('net');
-var when = require('when');
+var net = require('net'),
+    dns = require('dns'),
+    when = require('when');
 
 function NNTP (host, port) {
   this.host = host;
@@ -10,10 +11,13 @@ NNTP.prototype.connect = function () {
   var deferred = when.defer();
   var that = this;
 
-  this.client = net.connect({host: this.host, port: this.port});
-  this.client.once('data', function (data) {
-    var response = that.createResponseFromString(data.toString());
-    deferred.resolve(response);
+  dns.lookup(this.host, function (error, address, family) {
+    that.client = net.connect({host: address, port: that.port});
+
+    that.client.once('data', function (data) {
+      var response = that.createResponseFromString(data.toString());
+      deferred.resolve(response);
+    });
   });
 
   return deferred.promise;
