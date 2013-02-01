@@ -1,0 +1,38 @@
+{
+    "name": "NNTP",
+    "version": "0.0.1",
+    "description": "A lightweight Promise and when() implementation, plus other async goodies.",
+    "keywords": ["promise", "promises", "deferred", "deferreds", "when", "async", "asynchronous", "cujo"],
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://www.opensource.org/licenses/mit-license.php"
+        }
+    ],
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/cujojs/when"
+        }
+    ],
+    "bugs": "https://github.com/cujojs/when/issues",
+    "maintainers": [
+        {
+            "name": "Robin van der Vleuten",
+            "web": "http://robinvdvleuten.nl"
+        }
+    ],
+    "dependencies": {
+        "when": "1.7.1"
+    },
+    "main": "nntp",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "test": "jshint *.js && buster test -e node && promise-tests promises-a test/when-adapter.js",
+        "test-all": "jshint *.js && buster test -e node && promise-tests all test/when-adapter.js",
+        "start": "buster server",
+        "test-browser": "jshint *.js && buster test -e browser"
+    }
+}
