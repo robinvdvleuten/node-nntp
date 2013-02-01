@@ -11,7 +11,6 @@ NNTP.prototype.connect = function () {
   var that = this;
 
   this.client = net.connect({host: this.host, port: this.port});
-
   this.client.once('data', function (data) {
     var response = that.createResponseFromString(data.toString());
     deferred.resolve(response);
@@ -38,16 +37,41 @@ NNTP.prototype.group = function (group) {
   return deferred.promise;
 };
 
+NNTP.prototype.overview = function (range, format) {
+  var deferred = when.defer();
+
+  this.sendCommand('XOVER ' + range, true)
+  .then(function (response) {
+    var messageStrings = response.buffer.split('\r\n'),
+        messages = [];
+
+    for (i in messageStrings) {
+      var messageParts = messageStrings[i].split('\t'),
+          message = {};
+
+      for (field in format) {
+        message[field] = messageParts.shift();
+      }
+
+      messages.push(message);
+    }
+
+    deferred.resolve(messages);
+  });
+
+  return deferred.promise;
+};
+
 NNTP.prototype.overviewFormat = function () {
   var deferred = when.defer();
 
   this.sendCommand('LIST OVERVIEW.FMT', true)
   .then(function (response) {
     var formatParts = response.buffer.split('\r\n'),
-        format = {};
+        format = {number: false};
 
     for (i in formatParts) {
-      if (formatParts[i].slice(-5, 5).toLowerCase() === ':full') {
+      if (formatParts[i].substr(-5, 5).toLowerCase() === ':full') {
         format[formatParts[i].slice(0, -5).toLowerCase()] = true;
       }
       else {
@@ -109,15 +133,23 @@ NNTP.prototype.sendCommand = function (command, multiline) {
   return deferred.promise;
 };
 
-var nntp = new NNTP('news.php.net', 119);
+var nntp = new NNTP('news.php.net', 119),
+    group,
+    format;
+
 nntp.connect()
 .then(function (response) {
   console.log('Successfully connected');
   return nntp.group('php.doc.nl');
 })
-.then(function (response) {
+.then(function (receivedGroup) {
+  group = receivedGroup;
   return nntp.overviewFormat();
 })
-.then(function (format) {
-  console.log(format);
+.then(function (receivedFormat) {
+  format = receivedFormat;
+  return nntp.overview(group.first + '-' + group.last, format);
+})
+.then(function (receivedMessages) {
+  console.log('Received ' + receivedMessages.length + ' messages');
 });
