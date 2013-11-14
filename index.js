@@ -115,15 +115,15 @@ NNTP.prototype.sendCommand = function (command, multiline) {
     var response = that.createResponseFromString(data.toString());
 
     if (multiline) {
-      var buffer = '';
+      var buff = '';
+
       return that.client.on('data', function (data) {
-        buffer += data.toString();
+        buff += data.toString();
 
-        if (!/\.\r\n$/.test(data.toString())) {
-          return;
-        }
+        if (buff.indexOf('\.\r\n') == -1) return;
 
-        response.buffer = buffer.replace(/\r\n\.\r\n$/, '');
+        // Remove '\r\n\.\r\n' at the end of the buffer
+        response.buffer = buff.slice(0, buff.length - 5);
         that.client.removeAllListeners('data');
 
         deferred.resolve(response);
