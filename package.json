@@ -3,17 +3,14 @@
     "version": "0.1.1",
     "description": "A client for connecting with a NNTP server.",
     "keywords": ["nntp", "client", "newsgroups", "usenet"],
-    "licenses": [
-        {
-            "type": "MIT",
-            "url": "http://www.opensource.org/licenses/mit-license.php"
-        }
-    ],
+    "license": "MIT",
     "repository": {
         "type": "git",
         "url": "https://github.com/RobinvdVleuten/node-nntp.git"
     },
-    "bugs": "https://github.com/RobinVdVleuten/node-nntp/issues",
+    "bugs": {
+        "url": "https://github.com/RobinVdVleuten/node-nntp/issues"
+    },
     "maintainers": [
         {
             "name": "Robin van der Vleuten",

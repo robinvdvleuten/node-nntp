@@ -1,7 +1,7 @@
 ## Usage
 
 ```javascript
-var NNTP = require('nntp')
+var NNTP = require('node-nntp')
 
 var nntp = new NNTP('news.php.net', 119),
     group,
