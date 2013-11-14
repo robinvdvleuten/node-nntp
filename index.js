@@ -27,8 +27,7 @@ NNTP.prototype.connect = function () {
 NNTP.prototype.group = function (group) {
   var deferred = when.defer();
 
-  this.sendCommand('GROUP ' + group)
-  .then(function (response) {
+  this.sendCommand('GROUP ' + group, function (response) {
     var messageParts = response.message.split(' ');
 
     deferred.resolve({
@@ -45,8 +44,7 @@ NNTP.prototype.group = function (group) {
 NNTP.prototype.overview = function (range, format) {
   var deferred = when.defer();
 
-  this.sendCommand('XOVER ' + range, true)
-  .then(function (response) {
+  this.sendCommand('XOVER ' + range, true, function (response) {
     var messageStrings = response.buffer.split('\r\n'),
         messages = [];
 
@@ -70,8 +68,7 @@ NNTP.prototype.overview = function (range, format) {
 NNTP.prototype.overviewFormat = function () {
   var deferred = when.defer();
 
-  this.sendCommand('LIST OVERVIEW.FMT', true)
-  .then(function (response) {
+  this.sendCommand('LIST OVERVIEW.FMT', true, function (response) {
     var formatParts = response.buffer.split('\r\n'),
         format = {number: false};
 
@@ -106,10 +103,14 @@ NNTP.prototype.createResponseFromString = function (string) {
   }
 };
 
-NNTP.prototype.sendCommand = function (command, multiline) {
-  var multiline = multiline || false;
+NNTP.prototype.sendCommand = function (command, multiline, callback) {
+  if (callback == undefined && typeof multiline == 'function') {
+    callback = multiline;
+    multiline = false;
+  }
 
-  var deferred = when.defer();
+  multiline = multiline || false;
+
   var that = this;
 
   this.client.once('data', function (data) {
@@ -127,15 +128,14 @@ NNTP.prototype.sendCommand = function (command, multiline) {
         response.buffer = buff.slice(0, buff.length - 5);
         that.client.removeAllListeners('data');
 
-        deferred.resolve(response);
+        callback(response);
       });
     }
 
-    deferred.resolve(response);
+    callback(response);
   });
 
   this.client.write(command + '\r\n');
-  return deferred.promise;
 };
 
 module.exports = NNTP;
