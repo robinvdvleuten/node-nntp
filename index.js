@@ -13,9 +13,10 @@ NNTP.prototype.connect = function () {
 
   dns.lookup(this.host, function (error, address, family) {
     that.client = net.connect({host: address, port: that.port});
+    that.client.setEncoding('utf8');
 
     that.client.once('data', function (data) {
-      var response = that.createResponseFromString(data.toString());
+      var response = that.createResponseFromString(data);
       deferred.resolve(response);
     });
   });
@@ -112,13 +113,13 @@ NNTP.prototype.sendCommand = function (command, multiline) {
   var that = this;
 
   this.client.once('data', function (data) {
-    var response = that.createResponseFromString(data.toString());
+    var response = that.createResponseFromString(data);
 
     if (multiline) {
       var buff = '';
 
       return that.client.on('data', function (data) {
-        buff += data.toString();
+        buff += data;
 
         if (buff.indexOf('\.\r\n') == -1) return;
 
