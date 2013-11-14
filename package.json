@@ -9,12 +9,10 @@
             "url": "http://www.opensource.org/licenses/mit-license.php"
         }
     ],
-    "repositories": [
-        {
-            "type": "git",
-            "url": "https://github.com/RobinVdVleuten/node-nntp"
-        }
-    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/RobinvdVleuten/node-nntp.git"
+    },
     "bugs": "https://github.com/RobinVdVleuten/node-nntp/issues",
     "maintainers": [
         {
@@ -23,7 +21,7 @@
         }
     ],
     "dependencies": {
-        "when": "1.7.1"
+        "when": "~2.6"
     },
     "main": "index"
 }
