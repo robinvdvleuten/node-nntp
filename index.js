@@ -34,7 +34,11 @@ NNTP.prototype.close = function () {
 NNTP.prototype.group = function (group) {
   var deferred = when.defer();
 
-  this.sendCommand('GROUP ' + group, function (response) {
+  this.sendCommand('GROUP ' + group, function (error, response) {
+    if (error) {
+      return deferred.reject(error);
+    }
+
     var messageParts = response.message.split(' ');
 
     deferred.resolve({
@@ -51,7 +55,11 @@ NNTP.prototype.group = function (group) {
 NNTP.prototype.overview = function (range, format) {
   var deferred = when.defer();
 
-  this.sendCommand('XOVER ' + range, true, function (response) {
+  this.sendCommand('XOVER ' + range, true, function (error, response) {
+    if (error) {
+      return deferred.reject(error);
+    }
+
     var messageStrings = response.buffer.toString('utf8').split('\r\n'),
         messages = [];
 
@@ -75,7 +83,11 @@ NNTP.prototype.overview = function (range, format) {
 NNTP.prototype.overviewFormat = function () {
   var deferred = when.defer();
 
-  this.sendCommand('LIST OVERVIEW.FMT', true, function (response) {
+  this.sendCommand('LIST OVERVIEW.FMT', true, function (error, response) {
+    if (error) {
+      return deferred.reject(error);
+    }
+
     var formatParts = response.buffer.toString('utf8').split('\r\n'),
         format = {number: false};
 
@@ -122,25 +134,29 @@ NNTP.prototype.sendCommand = function (command, multiline, callback) {
 
   this.socket.once('data', function (data) {
     var response = self.createResponseFromString(data);
+    if (!multiline || response.status >= 400) {
+      var error = null;
+      if (response.status >= 400) {
+        error = 'An error received: ' + response.message + ' [' + response.status + ']';
+      }
 
-    if (multiline) {
-      var buff = new Buffer(0);
-
-      return self.socket.on('data', function (data) {
-        buff = Buffer.isBuffer(data) ? data : new Buffer(data);
-        if (buff.toString('utf8', buff.length - 3) != ".\r\n") return;
-
-        // Remove '\r\n\.\r\n' at the end of the buffer
-        response.buffer = buff.slice(0, buff.length - 5);
-        self.socket.removeAllListeners('data');
-        self.socket.pause();
-
-        callback(response);
-      });
+      self.socket.pause();
+      return callback(error, response);
     }
 
-    self.socket.pause();
-    callback(response);
+    var buff = new Buffer(0);
+
+    return self.socket.on('data', function (data) {
+      buff = Buffer.isBuffer(data) ? data : new Buffer(data);
+      if (buff.toString('utf8', buff.length - 3) != ".\r\n") return;
+
+      // Remove '\r\n\.\r\n' at the end of the buffer
+      response.buffer = buff.slice(0, buff.length - 5);
+      self.socket.removeAllListeners('data');
+      self.socket.pause();
+
+      callback(null, response);
+    });
   });
 
   this.socket.resume();
