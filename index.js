@@ -2,10 +2,12 @@ var net = require('net'),
     tls = require('tls'),
     when = require('when');
 
-function NNTP (host, port, secure) {
+function NNTP (host, options) {
   this.host = host;
-  this.port = port;
-  this.secure = secure || false;
+
+  this.options = options || {};
+  this.port = options.port || 119;
+  this.secure = options.secure || false;
 
   this.socket = null;
 };
