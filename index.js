@@ -1,27 +1,25 @@
 var net = require('net'),
-    dns = require('dns'),
-    stream = require('stream'),
+    tls = require('tls'),
     when = require('when');
 
-function NNTP (host, port) {
+function NNTP (host, port, secure) {
   this.host = host;
   this.port = port;
+  this.secure = secure || false;
 
-  this.socket = new net.Socket();
+  this.socket = null;
 };
 
 NNTP.prototype.connect = function () {
   var deferred = when.defer();
+
+  this.socket = (this.secure ? tls : net).connect(this.port, this.host);
+  this.socket.setEncoding('utf8');
+
   var self = this;
-
-  dns.lookup(this.host, function (error, address, family) {
-    self.socket.setEncoding('utf8');
-    self.socket.connect(self.port, address);
-
-    self.socket.once('data', function (data) {
-      var response = self.createResponseFromString(data);
-      deferred.resolve(response);
-    });
+  this.socket.once('data', function (data) {
+    var response = self.createResponseFromString(data);
+    deferred.resolve(response);
   });
 
   return deferred.promise;
