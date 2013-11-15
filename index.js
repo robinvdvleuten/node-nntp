@@ -1,28 +1,35 @@
 var net = require('net'),
     dns = require('dns'),
+    stream = require('stream'),
     when = require('when');
 
 function NNTP (host, port) {
   this.host = host;
   this.port = port;
+
+  this.socket = new net.Socket();
 };
 
 NNTP.prototype.connect = function () {
   var deferred = when.defer();
-  var that = this;
+  var self = this;
 
   dns.lookup(this.host, function (error, address, family) {
-    that.client = net.connect({host: address, port: that.port});
-    that.client.setEncoding('utf8');
+    self.socket.setEncoding('utf8');
+    self.socket.connect(self.port, address);
 
-    that.client.once('data', function (data) {
-      var response = that.createResponseFromString(data);
+    self.socket.once('data', function (data) {
+      var response = self.createResponseFromString(data);
       deferred.resolve(response);
     });
   });
 
   return deferred.promise;
 };
+
+NNTP.prototype.close = function () {
+  this.socket.destroy();
+}
 
 NNTP.prototype.group = function (group) {
   var deferred = when.defer();
@@ -45,7 +52,7 @@ NNTP.prototype.overview = function (range, format) {
   var deferred = when.defer();
 
   this.sendCommand('XOVER ' + range, true, function (response) {
-    var messageStrings = response.buffer.split('\r\n'),
+    var messageStrings = response.buffer.toString('utf8').split('\r\n'),
         messages = [];
 
     for (i in messageStrings) {
@@ -69,7 +76,7 @@ NNTP.prototype.overviewFormat = function () {
   var deferred = when.defer();
 
   this.sendCommand('LIST OVERVIEW.FMT', true, function (response) {
-    var formatParts = response.buffer.split('\r\n'),
+    var formatParts = response.buffer.toString('utf8').split('\r\n'),
         format = {number: false};
 
     for (i in formatParts) {
@@ -111,31 +118,33 @@ NNTP.prototype.sendCommand = function (command, multiline, callback) {
 
   multiline = multiline || false;
 
-  var that = this;
+  var self = this;
 
-  this.client.once('data', function (data) {
-    var response = that.createResponseFromString(data);
+  this.socket.once('data', function (data) {
+    var response = self.createResponseFromString(data);
 
     if (multiline) {
-      var buff = '';
+      var buff = new Buffer(0);
 
-      return that.client.on('data', function (data) {
-        buff += data;
-
-        if (buff.indexOf('\.\r\n') == -1) return;
+      return self.socket.on('data', function (data) {
+        buff = Buffer.isBuffer(data) ? data : new Buffer(data);
+        if (buff.toString('utf8', buff.length - 3) != ".\r\n") return;
 
         // Remove '\r\n\.\r\n' at the end of the buffer
         response.buffer = buff.slice(0, buff.length - 5);
-        that.client.removeAllListeners('data');
+        self.socket.removeAllListeners('data');
+        self.socket.pause();
 
         callback(response);
       });
     }
 
+    self.socket.pause();
     callback(response);
   });
 
-  this.client.write(command + '\r\n');
+  this.socket.resume();
+  this.socket.write(command + '\r\n');
 };
 
 module.exports = NNTP;
