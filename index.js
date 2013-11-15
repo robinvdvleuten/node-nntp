@@ -4,24 +4,43 @@ var net = require('net'),
 
 function NNTP (host, options) {
   this.host = host;
-
   this.options = options || {};
-  this.port = options.port || 119;
-  this.secure = options.secure || false;
 
   this.socket = null;
 };
 
-NNTP.prototype.connect = function () {
-  var deferred = when.defer();
+NNTP.prototype.authenticate = function () {
+  var deferred = when.defer(),
+      self = this;
 
-  this.socket = (this.secure ? tls : net).connect(this.port, this.host);
+  this.authInfo('USER', this.options.username).then(function (response) {
+    if (response.status == 381) {
+      if (!self.options.password) {
+        return deferred.reject('Password is required');
+      }
+
+      return self.authInfo('PASS', self.options.password).then(function (response) {
+        deferred.resolve(response);
+      });
+    }
+
+    deferred.resolve(response);
+  });
+
+  return deferred.promise;
+};
+
+NNTP.prototype.connect = function () {
+  var deferred = when.defer(),
+      self = this;
+
+  this.socket = (this.options.secure || false ? tls : net).connect(this.options.port || 119, this.host);
   this.socket.setEncoding('utf8');
 
-  var self = this;
   this.socket.once('data', function (data) {
     var response = self.createResponseFromString(data);
-    deferred.resolve(response);
+
+    return deferred.resolve(response);
   });
 
   return deferred.promise;
@@ -29,6 +48,20 @@ NNTP.prototype.connect = function () {
 
 NNTP.prototype.close = function () {
   this.socket.destroy();
+}
+
+NNTP.prototype.authInfo = function (type, value) {
+  var deferred = when.defer();
+
+  this.sendCommand('AUTHINFO ' + type + ' ' + value, function (error, response) {
+    if (error) {
+      return deferred.reject(error);
+    }
+
+    deferred.resolve(response);
+  });
+
+  return deferred.promise;
 }
 
 NNTP.prototype.group = function (group) {
