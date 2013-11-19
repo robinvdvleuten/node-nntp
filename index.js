@@ -1,6 +1,5 @@
 var net = require('net'),
-    tls = require('tls'),
-    when = require('when');
+    tls = require('tls');
 
 function NNTP (host, options) {
   this.host = host;
@@ -9,30 +8,28 @@ function NNTP (host, options) {
   this.socket = null;
 };
 
-NNTP.prototype.authenticate = function () {
-  var deferred = when.defer(),
-      self = this;
+NNTP.prototype.authenticate = function (callback) {
+  var self = this;
 
-  this.authInfo('USER', this.options.username).then(function (response) {
+  this.authInfo('USER', this.options.username, function (error, response) {
+    if (error) {
+      return callback(error);
+    }
+
     if (response.status == 381) {
       if (!self.options.password) {
         return deferred.reject('Password is required');
       }
 
-      return self.authInfo('PASS', self.options.password).then(function (response) {
-        deferred.resolve(response);
-      });
+      return self.authInfo('PASS', self.options.password, callback);
     }
 
-    deferred.resolve(response);
+    callback(null, response);
   });
-
-  return deferred.promise;
 };
 
-NNTP.prototype.connect = function () {
-  var deferred = when.defer(),
-      self = this;
+NNTP.prototype.connect = function (callback) {
+  var self = this;
 
   this.socket = (this.options.secure || false ? tls : net).connect(this.options.port || 119, this.host);
   this.socket.setEncoding('utf8');
@@ -40,57 +37,39 @@ NNTP.prototype.connect = function () {
   this.socket.once('data', function (data) {
     var response = self.createResponseFromString(data);
 
-    return deferred.resolve(response);
+    callback(null, response);
   });
-
-  return deferred.promise;
 };
 
 NNTP.prototype.close = function () {
   this.socket.destroy();
 }
 
-NNTP.prototype.authInfo = function (type, value) {
-  var deferred = when.defer();
-
-  this.sendCommand('AUTHINFO ' + type + ' ' + value, function (error, response) {
-    if (error) {
-      return deferred.reject(error);
-    }
-
-    deferred.resolve(response);
-  });
-
-  return deferred.promise;
+NNTP.prototype.authInfo = function (type, value, callback) {
+  this.sendCommand('AUTHINFO ' + type + ' ' + value, callback);
 }
 
-NNTP.prototype.group = function (group) {
-  var deferred = when.defer();
-
+NNTP.prototype.group = function (group, callback) {
   this.sendCommand('GROUP ' + group, function (error, response) {
     if (error) {
-      return deferred.reject(error);
+      return callback(error);
     }
 
     var messageParts = response.message.split(' ');
 
-    deferred.resolve({
+    callback(null, {
       name:  messageParts[3],
       count: parseInt(messageParts[0]),
       first: parseInt(messageParts[1]),
       last:  parseInt(messageParts[2]),
     });
   });
-
-  return deferred.promise;
 };
 
-NNTP.prototype.overview = function (range, format) {
-  var deferred = when.defer();
-
+NNTP.prototype.overview = function (range, format, callback) {
   this.sendCommand('XOVER ' + range, true, function (error, response) {
     if (error) {
-      return deferred.reject(error);
+      return callback(error);
     }
 
     var messageStrings = response.buffer.toString('utf8').split('\r\n'),
@@ -107,18 +86,14 @@ NNTP.prototype.overview = function (range, format) {
       messages.push(message);
     }
 
-    deferred.resolve(messages);
+    callback(null, messages);
   });
-
-  return deferred.promise;
 };
 
-NNTP.prototype.overviewFormat = function () {
-  var deferred = when.defer();
-
+NNTP.prototype.overviewFormat = function (callback) {
   this.sendCommand('LIST OVERVIEW.FMT', true, function (error, response) {
     if (error) {
-      return deferred.reject(error);
+      return callback(error);
     }
 
     var formatParts = response.buffer.toString('utf8').split('\r\n'),
@@ -133,10 +108,8 @@ NNTP.prototype.overviewFormat = function () {
       }
     }
 
-    deferred.resolve(format);
+    callback(null, format);
   });
-
-  return deferred.promise;
 };
 
 NNTP.prototype.createResponseFromString = function (string) {
