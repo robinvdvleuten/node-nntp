@@ -152,8 +152,8 @@ NNTP.prototype.sendCommand = function (command, multiline, callback) {
 
     var buff = new Buffer(0);
 
-    return self.socket.on('data', function (data) {
-      buff = Buffer.isBuffer(data) ? data : new Buffer(data);
+    self.socket.on('data', function (data) {
+      buff = Buffer.concat([buff, Buffer.isBuffer(data) ? data : new Buffer(data)]);
       if (buff.toString('utf8', buff.length - 3) != ".\r\n") return;
 
       // Remove '\r\n\.\r\n' at the end of the buffer
@@ -163,10 +163,16 @@ NNTP.prototype.sendCommand = function (command, multiline, callback) {
 
       callback(null, response);
     });
+
+    var lines = data.split("\r\n");
+    lines.shift();
+    data = lines.join("\r\n");
+
+    self.socket.push(data);
   });
 
   this.socket.resume();
-  this.socket.write(command + '\r\n');
+  this.socket.write(command + "\r\n");
 };
 
 module.exports = NNTP;
