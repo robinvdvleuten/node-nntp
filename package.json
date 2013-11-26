@@ -1,22 +1,33 @@
 {
-    "name": "node-nntp",
-    "version": "0.1.4",
-    "description": "A client for connecting with a NNTP server.",
-    "keywords": ["nntp", "client", "newsgroups", "usenet"],
-    "license": "MIT",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/RobinvdVleuten/node-nntp.git"
-    },
-    "bugs": {
-        "url": "https://github.com/RobinVdVleuten/node-nntp/issues"
-    },
-    "maintainers": [
-        {
-            "name": "Robin van der Vleuten",
-            "web": "http://robinvdvleuten.nl"
-        }
-    ],
-    "dependencies": {},
-    "main": "index"
+  "name": "node-nntp",
+  "version": "0.1.4",
+  "description": "A client for connecting with a NNTP server.",
+  "keywords": [
+    "nntp",
+    "client",
+    "newsgroups",
+    "usenet"
+  ],
+  "author": "Robin van der Vleuten <robinvdvleuten@gmail.com>",
+  "contributors": [
+    {
+      "name": "Robin van der Vleuten",
+      "email": "robinvdvleuten@gmail.com",
+      "web": "http://robinvdvleuten.nl"
+    }
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RobinvdVleuten/node-nntp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/RobinVdVleuten/node-nntp/issues"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "main": "index",
+  "scripts": {
+    "prepublish": "npm prune"
+  }
 }

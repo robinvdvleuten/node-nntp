@@ -1,26 +1,25 @@
+# NNTP
+
+[![Dependency Status](https://gemnasium.com/RobinvdVleuten/node-nntp.png)](https://gemnasium.com/RobinvdVleuten/node-nntp)
+
 ## Usage
 
 ```javascript
-var NNTP = require('node-nntp');
+var NNTP = require('nntp');
 
 var nntp = new NNTP('news.php.net', 119),
-    group,
-    format;
+    group;
 
 nntp.connect(function (response) {
-  console.log('Successfully connected');
 
-  return nntp.group('php.doc.nl', function (error, receivedGroup) {
-    group = receivedGroup;
+  nntp.group('php.doc.nl', function (error, receivedGroup) {
 
-    return nntp.overviewFormat(function (error, receivedFormat) {
-      format = receivedFormat;
+    nntp.overviewFormat(function (error, receivedFormat) {
 
-      return nntp.overview(group.first + '-' + group.last, format, function (error, receivedMessages) {
+      nntp.overview(receivedGroup.first + '-' + receivedGroup.last, receivedFormat, function (error, receivedMessages) {
         console.log(receivedMessages);
       });
     });
   });
 });
-
 ```
