@@ -1,6 +1,6 @@
 # NNTP
 
-[![Dependency Status](https://gemnasium.com/RobinvdVleuten/node-nntp.png)](https://gemnasium.com/RobinvdVleuten/node-nntp)
+[![Build Status](https://travis-ci.org/RobinvdVleuten/node-nntp.png?branch=master)](https://travis-ci.org/RobinvdVleuten/node-nntp)
 
 ## Usage
 
