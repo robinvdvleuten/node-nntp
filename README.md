@@ -10,7 +10,10 @@ var NNTP = require('nntp');
 var nntp = new NNTP('news.php.net', 119),
     group;
 
-nntp.connect(function (response) {
+nntp.connect(function (error, response) {
+  if (error) {
+    throw error;
+  }
 
   nntp.group('php.doc.nl', function (error, receivedGroup) {
 

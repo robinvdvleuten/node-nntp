@@ -39,6 +39,10 @@ NNTP.prototype.connect = function (callback) {
 
     callback(null, response);
   });
+
+  this.socket.once('error', function (error) {
+    callback(error);
+  });
 };
 
 NNTP.prototype.close = function () {
