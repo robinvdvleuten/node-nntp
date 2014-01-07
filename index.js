@@ -120,11 +120,11 @@ NNTP.prototype.overviewFormat = function (callback) {
 NNTP.prototype.createResponseFromString = function (string) {
   var matches = /^(\d{3}) ([\S\s]+)$/g.exec(string.trim());
   if (!matches) {
-    // @todo throw exception.
+    throw new Error('Invalid response given: ' + string);
   }
 
   if (matches[1] < 100 || matches[1] >= 600) {
-    // @todo throw exception.
+    throw new Error('Invalid status code given: ' + matches[1]);
   }
 
   return {
