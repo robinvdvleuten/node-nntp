@@ -1,6 +1,6 @@
 {
   "name": "node-nntp",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "A client for connecting with a NNTP server.",
   "keywords": [
     "nntp",

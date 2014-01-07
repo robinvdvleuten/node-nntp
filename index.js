@@ -128,7 +128,7 @@ NNTP.prototype.createResponseFromString = function (string) {
   }
 
   return {
-    'status': matches[1],
+    'status': parseInt(matches[1], 10),
     'message': matches[2]
   };
 };
