@@ -1,10 +1,11 @@
-var net = require('net'),
-    tls = require('tls');
+var defaults = {
+  host: 'localhost',
+  port: 119,
+  secure: false,
+}
 
-function NNTP (host, options) {
-  this.host = host;
-  this.options = options || {};
-
+function NNTP (options) {
+  this.options = mergeDefaults(defaults, options || {});
   this.socket = null;
 };
 
@@ -31,7 +32,7 @@ NNTP.prototype.authenticate = function (callback) {
 NNTP.prototype.connect = function (callback) {
   var self = this;
 
-  this.socket = (this.options.secure || false ? tls : net).connect(this.options.port || 119, this.host);
+  this.socket = require(this.options.secure ? 'tls' : 'net').connect(this.options.port, this.options.host);
   this.socket.setEncoding('utf8');
 
   this.socket.once('data', function (data) {
@@ -180,3 +181,11 @@ NNTP.prototype.sendCommand = function (command, multiline, callback) {
 };
 
 module.exports = NNTP;
+
+function mergeDefaults (defaults, arguments) {
+  for(var i in arguments) {
+    defaults[i] = arguments[i];
+  }
+
+  return defaults;
+}

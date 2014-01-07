@@ -15,7 +15,7 @@ describe('NNTP', function () {
       });
 
       server.listen(5000, function () {
-        var nntp = new NNTP('localhost', {port: 5000});
+        var nntp = new NNTP({host: 'localhost', port: 5000});
 
         nntp.connect(function (error, response) {
           assert.equal(null, error);
@@ -37,7 +37,7 @@ describe('NNTP', function () {
       });
 
       server.listen(5000, function () {
-        var nntp = new NNTP('localhost', {port: 6000});
+        var nntp = new NNTP({host: 'localhost', port: 6000});
 
         nntp.connect(function (error, response) {
           assert.notEqual(null, error);

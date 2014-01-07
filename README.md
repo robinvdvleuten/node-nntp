@@ -7,7 +7,7 @@
 ```javascript
 var NNTP = require('nntp');
 
-var nntp = new NNTP('news.php.net', 119),
+var nntp = new NNTP({host: 'news.php.net', port: 119, secure: false}),
     group;
 
 nntp.connect(function (error, response) {
