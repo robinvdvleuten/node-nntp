@@ -56,21 +56,22 @@ describe('NNTP', function () {
       server = net.createServer(function (connection) {
         connection.write('200 server ready - posting allowed\r\n');
 
+
         connection.on('data', function (data) {
           data = data.toString('utf8');
           assert.equal('AUTHINFO USER user\r\n', data);
 
-          connection.write('');
+          connection.write('281 Authentication accepted');
         });
       });
 
       server.listen(5000, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user', password: 'pass'});
-        nntp.connect(function () {
+        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+        nntp.connect(function (error, response) {
           nntp.authenticate(function (error, response) {
             assert.equal(null, error);
-            assert.equal(response.status, 200);
-            assert.equal(response.message, 'server ready - posting allowed');
+            assert.equal(response.status, 281);
+            assert.equal(response.message, 'Authentication accepted');
 
             done();
           });
