@@ -46,4 +46,36 @@ describe('NNTP', function () {
       });
     });
   });
+
+  describe('#authenticate()', function () {
+    it('should return a response when authentication is successful', function (done) {
+      if (server !== undefined) {
+        server.close();
+      }
+
+      server = net.createServer(function (connection) {
+        connection.write('200 server ready - posting allowed\r\n');
+
+        connection.on('data', function (data) {
+          data = data.toString('utf8');
+          assert.equal('AUTHINFO USER user\r\n', data);
+
+          connection.write('');
+        });
+      });
+
+      server.listen(5000, function () {
+        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user', password: 'pass'});
+        nntp.connect(function () {
+          nntp.authenticate(function (error, response) {
+            assert.equal(null, error);
+            assert.equal(response.status, 200);
+            assert.equal(response.message, 'server ready - posting allowed');
+
+            done();
+          });
+        });
+      });
+    });
+  });
 });
