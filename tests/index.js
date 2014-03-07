@@ -1,6 +1,6 @@
 var assert = require('assert'),
     net = require('net'),
-    NNTP = require('../'),
+    NNTP = require('../lib/nntp'),
     server;
 
 describe('NNTP', function () {
