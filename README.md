@@ -31,7 +31,7 @@ nntp.connect(function (error, response) {
 
     nntp.overviewFormat(function (error, receivedFormat) {
 
-      nntp.overview(receivedGroup.first + '-' + receivedGroup.first + 100, receivedFormat, function (error, receivedMessages) {
+      nntp.overview(receivedGroup.first + '-' + (parseInt(receivedGroup.first, 10) + 100), receivedFormat, function (error, receivedMessages) {
         console.log(receivedMessages);
       });
     });
