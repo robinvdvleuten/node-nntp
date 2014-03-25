@@ -25,6 +25,7 @@
     "url": "https://github.com/RobinVdVleuten/node-nntp/issues"
   },
   "dependencies": {
+    "readable-stream": "~1.0.26-2",
     "xtend": "~2.1.2"
   },
   "devDependencies": {
