@@ -57,7 +57,6 @@ describe('NNTP', function () {
 
         connection.on('data', function (data) {
           data = data.toString('utf8');
-          console.log(data);
           assert.equal('AUTHINFO USER user\r\n', data);
 
           connection.write('281 Authentication accepted');
