@@ -17,8 +17,7 @@ describe('NNTP', function () {
       server.listen(5000, function () {
         var nntp = new NNTP({host: 'localhost', port: 5000});
 
-        nntp.connect(function (error, response) {
-          assert.equal(null, error);
+        nntp.connect().then(function (response) {
           assert.equal(response.status, 200);
           assert.equal(response.message, 'server ready - posting allowed');
 
@@ -39,7 +38,7 @@ describe('NNTP', function () {
       server.listen(5000, function () {
         var nntp = new NNTP({host: 'localhost', port: 6000});
 
-        nntp.connect(function (error, response) {
+        nntp.connect().catch(function (error) {
           assert.notEqual(null, error);
           done();
         });
@@ -56,9 +55,9 @@ describe('NNTP', function () {
       server = net.createServer(function (connection) {
         connection.write('200 server ready - posting allowed\r\n');
 
-
         connection.on('data', function (data) {
           data = data.toString('utf8');
+          console.log(data);
           assert.equal('AUTHINFO USER user\r\n', data);
 
           connection.write('281 Authentication accepted');
@@ -67,15 +66,17 @@ describe('NNTP', function () {
 
       server.listen(5000, function () {
         var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
-        nntp.connect(function (error, response) {
-          nntp.authenticate(function (error, response) {
-            assert.equal(null, error);
+
+        nntp.connect()
+          .then(function (response) {
+            return nntp.authenticate();
+          })
+          .then(function (response) {
             assert.equal(response.status, 281);
             assert.equal(response.message, 'Authentication accepted');
 
             done();
           });
-        });
       });
     });
   });

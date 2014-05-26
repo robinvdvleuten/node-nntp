@@ -20,22 +20,26 @@ Here is an example that fetches 100 articles from the _php.doc_ of the _news.php
 var NNTP = require('node-nntp');
 
 var nntp = new NNTP({host: 'news.php.net', port: 119, secure: false}),
-    group;
+    group,
+    format;
 
-nntp.connect(function (error, response) {
-  if (error) {
-    throw error;
-  }
+nntp.connect()
+  .then(function (response) {
+    return nntp.group('php.doc.nl');
+  })
+  .then(function (receivedGroup) {
+    group = receivedGroup;
 
-  nntp.group('php.doc.nl', function (error, receivedGroup) {
+    return nntp.overviewFormat();
+  .then(function (receivedFormat) {
+    format = receivedFormat;
 
-    nntp.overviewFormat(function (error, receivedFormat) {
-
-      nntp.overview(receivedGroup.first + '-' + (parseInt(receivedGroup.first, 10) + 100), receivedFormat, function (error, receivedMessages) {
-        console.log(receivedMessages);
-      });
-    });
-  });
+    return nntp.overview(group.first + '-' + (parseInt(group.first, 10) + 100), format);
+  })
+  .then(function (receivedMessages) {
+    console.log(receivedMessages);
+  })
+  .done();
 });
 ```
 
