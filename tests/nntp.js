@@ -78,5 +78,43 @@ describe('NNTP', function () {
           });
       });
     });
+
+    it('should return a response when authentication with password is successful', function (done) {
+      if (server !== undefined) {
+        server.close();
+      }
+
+      server = net.createServer(function (connection) {
+        connection.write('200 server ready - posting allowed\r\n');
+
+        var messages = [], message;
+        messages.push({ request: 'AUTHINFO USER user\r\n', response: '381 Password needed' });
+        messages.push({ request: 'AUTHINFO PASS pass\r\n', response: '281 Authentication accepted' });
+
+        connection.on('data', function (data) {
+          data = data.toString('utf8');
+
+          message = messages.shift();
+          assert.equal(message.request, data);
+
+          connection.write(message.response);
+        });
+      });
+
+      server.listen(5000, function () {
+        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user', password: 'pass'});
+
+        nntp.connect()
+          .then(function (response) {
+            return nntp.authenticate();
+          })
+          .then(function (response) {
+            assert.equal(response.status, 281);
+            assert.equal(response.message, 'Authentication accepted');
+
+            done();
+          });
+      });
+    });
   });
 });
