@@ -17,7 +17,7 @@ $ npm install node-nntp
 Here is an example that fetches 100 articles from the _php.doc_ of the _news.php.net_ server:
 
 ```javascript
-var NNTP = require('nntp');
+var NNTP = require('node-nntp');
 
 var nntp = new NNTP({host: 'news.php.net', port: 119, secure: false}),
     group;

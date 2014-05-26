@@ -34,7 +34,6 @@
   "devDependencies": {
     "mocha": "~1.16.2"
   },
-  "main": "lib/nntp",
   "scripts": {
     "prepublish": "npm prune",
     "test": "mocha tests/index.js"
