@@ -32,10 +32,12 @@
     "xtend": "~2.1.2"
   },
   "devDependencies": {
+    "istanbul": "^0.2.10",
     "mocha": "~1.16.2"
   },
   "scripts": {
     "prepublish": "npm prune",
-    "test": "mocha tests/index.js"
+    "test": "mocha --reporter dot --check-leaks tests",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --reporter dot --check-leaks tests"
   }
 }
