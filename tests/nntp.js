@@ -1,5 +1,6 @@
 var assert = require('assert'),
     net = require('net'),
+    async = require('async'),
     NNTP = require('../index'),
     server;
 
@@ -17,7 +18,8 @@ describe('NNTP', function () {
       server.listen(5000, function () {
         var nntp = new NNTP({host: 'localhost', port: 5000});
 
-        nntp.connect().then(function (response) {
+        nntp.connect(function (error, response) {
+          assert.equal(null, error);
           assert.equal(response.status, 200);
           assert.equal(response.message, 'server ready - posting allowed');
 
@@ -38,8 +40,9 @@ describe('NNTP', function () {
       server.listen(5000, function () {
         var nntp = new NNTP({host: 'localhost', port: 6000});
 
-        nntp.connect().catch(function (error) {
+        nntp.connect(function (error, response) {
           assert.notEqual(null, error);
+          assert.equal(null, response);
           done();
         });
       });
@@ -66,16 +69,22 @@ describe('NNTP', function () {
       server.listen(5000, function () {
         var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
 
-        nntp.connect()
-          .then(function (response) {
-            return nntp.authenticate();
-          })
-          .then(function (response) {
+        async.waterfall([
+          function (callback) {
+            nntp.connect(callback);
+          },
+          function (response, callback) {
+            nntp.authenticate(callback);
+          },
+          function (response, callback) {
             assert.equal(response.status, 281);
             assert.equal(response.message, 'Authentication accepted');
 
-            done();
-          });
+            callback();
+          }
+        ], function () {
+          done();
+        });
       });
     });
 
@@ -104,16 +113,22 @@ describe('NNTP', function () {
       server.listen(5000, function () {
         var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user', password: 'pass'});
 
-        nntp.connect()
-          .then(function (response) {
-            return nntp.authenticate();
-          })
-          .then(function (response) {
+        async.waterfall([
+          function (callback) {
+            nntp.connect(callback);
+          },
+          function (response, callback) {
+            nntp.authenticate(callback);
+          },
+          function (response, callback) {
             assert.equal(response.status, 281);
             assert.equal(response.message, 'Authentication accepted');
 
-            done();
-          });
+            callback();
+          }
+        ], function () {
+          done();
+        });
       });
     });
   });
