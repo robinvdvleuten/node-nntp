@@ -113,5 +113,28 @@ describe('NNTP', function () {
         });
       });
     });
+
+    it ('should return an error when authentication without a password', function (done) {
+      var messages = [
+        { request: 'AUTHINFO USER user\r\n', response: '381 Password needed' }
+      ];
+
+      createServer(messages, function () {
+        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+
+        async.waterfall([
+          function (callback) {
+            nntp.connect(callback);
+          },
+          function (response, callback) {
+            nntp.authenticate(callback);
+          }
+        ], function (error) {
+          assert.notEqual(null, error);
+          assert.equal(error.message, 'Password is required');
+          done();
+        });
+      });
+    });
   });
 });
