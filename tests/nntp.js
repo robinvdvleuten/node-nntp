@@ -4,18 +4,35 @@ var assert = require('assert'),
     NNTP = require('../index'),
     server;
 
+function createServer(messages, callback) {
+  if (server !== undefined) {
+    server.close();
+  }
+
+  server = net.createServer(function (connection) {
+    connection.write('200 server ready - posting allowed\r\n');
+
+    if (messages.length > 0) {
+      var message;
+
+      connection.on('data', function (data) {
+        data = data.toString('utf8');
+
+        message = messages.shift();
+        assert.equal(message.request, data);
+
+        connection.write(message.response);
+      });
+    }
+  });
+
+  server.listen(5000, callback);
+}
+
 describe('NNTP', function () {
   describe('#connect()', function () {
     it('should return a response when connection is successful', function (done) {
-      if (server !== undefined) {
-        server.close();
-      }
-
-      server = net.createServer(function (connection) {
-        connection.write('200 server ready - posting allowed\r\n');
-      });
-
-      server.listen(5000, function () {
+      createServer([], function () {
         var nntp = new NNTP({host: 'localhost', port: 5000});
 
         nntp.connect(function (error, response) {
@@ -29,15 +46,7 @@ describe('NNTP', function () {
     });
 
     it('should return an error when connection is unsuccessful', function (done) {
-      if (server !== undefined) {
-        server.close();
-      }
-
-      server = net.createServer(function (connection) {
-        connection.write('200 server ready - posting allowed\r\n');
-      });
-
-      server.listen(5000, function () {
+      createServer([], function () {
         var nntp = new NNTP({host: 'localhost', port: 6000});
 
         nntp.connect(function (error, response) {
@@ -51,22 +60,11 @@ describe('NNTP', function () {
 
   describe('#authenticate()', function () {
     it('should return a response when authentication is successful', function (done) {
-      if (server !== undefined) {
-        server.close();
-      }
+      var messages = [
+        { request: 'AUTHINFO USER user\r\n', response: '281 Authentication accepted' }
+      ];
 
-      server = net.createServer(function (connection) {
-        connection.write('200 server ready - posting allowed\r\n');
-
-        connection.on('data', function (data) {
-          data = data.toString('utf8');
-          assert.equal('AUTHINFO USER user\r\n', data);
-
-          connection.write('281 Authentication accepted');
-        });
-      });
-
-      server.listen(5000, function () {
+      createServer(messages, function () {
         var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
 
         async.waterfall([
@@ -89,28 +87,12 @@ describe('NNTP', function () {
     });
 
     it('should return a response when authentication with password is successful', function (done) {
-      if (server !== undefined) {
-        server.close();
-      }
+      var messages = [
+        { request: 'AUTHINFO USER user\r\n', response: '381 Password needed' },
+        { request: 'AUTHINFO PASS pass\r\n', response: '281 Authentication accepted' }
+      ];
 
-      server = net.createServer(function (connection) {
-        connection.write('200 server ready - posting allowed\r\n');
-
-        var messages = [], message;
-        messages.push({ request: 'AUTHINFO USER user\r\n', response: '381 Password needed' });
-        messages.push({ request: 'AUTHINFO PASS pass\r\n', response: '281 Authentication accepted' });
-
-        connection.on('data', function (data) {
-          data = data.toString('utf8');
-
-          message = messages.shift();
-          assert.equal(message.request, data);
-
-          connection.write(message.response);
-        });
-      });
-
-      server.listen(5000, function () {
+      createServer(messages, function () {
         var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user', password: 'pass'});
 
         async.waterfall([
