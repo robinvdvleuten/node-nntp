@@ -38,7 +38,7 @@
   },
   "scripts": {
     "prepublish": "npm prune",
-    "test": "mocha --reporter dot --check-leaks tests",
-    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --reporter dot --check-leaks tests"
+    "test": "mocha --reporter=dot --check-leaks tests",
+    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --reporter=dot --check-leaks tests"
   }
 }
