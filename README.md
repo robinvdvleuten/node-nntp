@@ -6,6 +6,7 @@ Client for communicating with servers throught the Network News Transfer Protoco
 [![Build Status](http://img.shields.io/travis/RobinvdVleuten/node-nntp.svg?style=flat)](https://travis-ci.org/RobinvdVleuten/node-nntp)
 [![Coverage Status](http://img.shields.io/coveralls/RobinvdVleuten/node-nntp.svg?style=flat)](https://coveralls.io/r/RobinvdVleuten/node-nntp)
 [![Code Climate](http://img.shields.io/codeclimate/github/RobinvdVleuten/node-nntp.svg?style=flat)](https://codeclimate.com/github/RobinvdVleuten/node-nntp)
+[![Gittip](http://img.shields.io/gittip/RobinvdVleuten.svg?style=flat)](https://www.gittip.com/RobinvdVleuten/)
 
 ## Installation
 
