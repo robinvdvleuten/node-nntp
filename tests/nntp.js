@@ -1,7 +1,7 @@
 var assert = require('assert'),
     net = require('net'),
     async = require('async'),
-    NNTP = require('../index'),
+    NNTP = require('../lib/nntp'),
     server;
 
 function createServer(messages, callback) {

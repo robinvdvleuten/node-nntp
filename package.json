@@ -36,6 +36,7 @@
     "istanbul": "^0.2.10",
     "mocha": "^1.16.2"
   },
+  "main": "./lib/nntp.js",
   "scripts": {
     "prepublish": "npm prune",
     "test": "mocha --reporter=dot --check-leaks tests",
