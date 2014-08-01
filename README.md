@@ -2,10 +2,10 @@
 
 Client for communicating with servers throught the Network News Transfer Protocol (NNTP) protocol.
 
-[![NPM version](http://img.shields.io/npm/v/node-nntp.svg)](https://www.npmjs.org/package/node-nntp)
-[![Build Status](http://img.shields.io/travis/RobinvdVleuten/node-nntp.svg)](https://travis-ci.org/RobinvdVleuten/node-nntp)
-[![Coverage Status](http://img.shields.io/coveralls/RobinvdVleuten/node-nntp.svg)](https://coveralls.io/r/RobinvdVleuten/node-nntp)
-[![Code Climate](http://img.shields.io/codeclimate/github/RobinvdVleuten/node-nntp.svg)](https://codeclimate.com/github/RobinvdVleuten/node-nntp)
+[![NPM version](http://img.shields.io/npm/v/node-nntp.svg?style=flat)](https://www.npmjs.org/package/node-nntp)
+[![Build Status](http://img.shields.io/travis/RobinvdVleuten/node-nntp.svg?style=flat)](https://travis-ci.org/RobinvdVleuten/node-nntp)
+[![Coverage Status](http://img.shields.io/coveralls/RobinvdVleuten/node-nntp.svg?style=flat)](https://coveralls.io/r/RobinvdVleuten/node-nntp)
+[![Code Climate](http://img.shields.io/codeclimate/github/RobinvdVleuten/node-nntp.svg?style=flat)](https://codeclimate.com/github/RobinvdVleuten/node-nntp)
 
 ## Installation
 
