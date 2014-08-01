@@ -40,7 +40,7 @@ async.waterfall([
   function (receivedFormat, callback) {
     format = receivedFormat;
 
-    nntp.overview(group.first + '-' + (parseInt(group.first, 10) + 100), format, callback);
+    nntp.xover(group.first + '-' + (parseInt(group.first, 10) + 100), format, callback);
   }
 ], function (error, messages) {
   console.log(messages);
