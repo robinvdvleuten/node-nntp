@@ -1,6 +1,6 @@
 # NNTP
 
-Client for communicating with servers throught the Network News Transfer Protocol (NNTP) protocol.
+Client for communicating with servers through the Network News Transfer Protocol (NNTP) protocol.
 
 [![NPM version](http://img.shields.io/npm/v/node-nntp.svg?style=flat)](https://www.npmjs.org/package/node-nntp)
 [![Build Status](http://img.shields.io/travis/RobinvdVleuten/node-nntp.svg?style=flat)](https://travis-ci.org/RobinvdVleuten/node-nntp)
@@ -41,7 +41,7 @@ async.waterfall([
   function (receivedFormat, callback) {
     format = receivedFormat;
 
-    nntp.xzver(group.first + '-' + (parseInt(group.first, 10) + 100), format, callback);
+    nntp.xover(group.first + '-' + (parseInt(group.first, 10) + 100), format, callback);
   }
 ], function (error, messages) {
   console.log(messages);
