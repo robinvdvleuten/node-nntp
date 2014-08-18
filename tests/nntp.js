@@ -1,313 +1,227 @@
+'use strict';
+
 var assert = require('assert'),
     net = require('net'),
     async = require('async'),
     zlib = require('zlib'),
+    thunkify = require('thunkify'),
     NNTP = require('../lib/nntp'),
     server;
 
-function createServer(messages, callback) {
-  if (server !== undefined) {
-    server.close();
-  }
+function createServer(messages) {
+  messages = messages || [];
 
-  server = net.createServer(function (connection) {
-    connection.write('200 server ready - posting allowed\r\n');
-
-    if (messages.length > 0) {
-      var message;
-
-      connection.on('data', function (data) {
-        data = data.toString('utf8');
-
-        message = messages.shift();
-        assert.equal(message.request, data);
-
-        connection.write(new Buffer(message.response, 'binary'));
-      });
+  return function (fn) {
+    if (server !== undefined) {
+      server.close();
     }
-  });
 
-  server.listen(5000, callback);
+    server = net.createServer(function (connection) {
+      connection.write('200 server ready - posting allowed\r\n');
+
+      if (messages.length > 0) {
+        var message;
+
+        connection.on('data', function (data) {
+          data = data.toString('utf8');
+
+          message = messages.shift();
+          assert.equal(message.request, data);
+
+          connection.write(new Buffer(message.response, 'binary'));
+        });
+      }
+    });
+
+    server.listen(5000, fn);
+  };
 }
 
 describe('NNTP', function () {
   describe('#connect()', function () {
-    it('should return a response when connection is successful', function (done) {
-      createServer([], function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000});
+    it('should return a response when connection is successful', function *() {
+      yield createServer();
 
-        nntp.connect(function (error, response) {
-          assert.equal(null, error);
-          assert.equal(response.status, 200);
-          assert.equal(response.message, 'server ready - posting allowed');
+      var nntp = new NNTP({host: 'localhost', port: 5000});
 
-          done();
-        });
-      });
+      var response = yield nntp.connect();
+      assert.equal(response.status, 200);
+      assert.equal(response.message, 'server ready - posting allowed');
     });
 
-    it('should return an error when connection is unsuccessful', function (done) {
-      createServer([], function () {
-        var nntp = new NNTP({host: 'localhost', port: 6000});
+    it('should return an error when connection is unsuccessful', function *() {
+      yield createServer();
 
-        nntp.connect(function (error, response) {
-          assert.notEqual(null, error);
-          assert.equal(null, response);
-          done();
-        });
-      });
+      var nntp = new NNTP({host: 'localhost', port: 6000}),
+          catchedError;
+
+      try {
+        yield nntp.connect();
+      } catch (error) {
+        catchedError = error;
+      }
+
+      assert.notEqual(undefined, catchedError);
+      assert.equal(catchedError.message, 'connect ECONNREFUSED');
     });
   });
 
   describe('#authenticate()', function () {
-    it('should return a response when authentication is successful', function (done) {
+    it('should return a response when authentication is successful', function *() {
       var messages = [
         { request: 'AUTHINFO USER user\r\n', response: '281 Authentication accepted' }
       ];
 
-      createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+      yield createServer(messages);
 
-        async.waterfall([
-          function (callback) {
-            nntp.connect(callback);
-          },
-          function (response, callback) {
-            nntp.authenticate(callback);
-          },
-          function (response, callback) {
-            assert.equal(response.status, 281);
-            assert.equal(response.message, 'Authentication accepted');
+      var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+      yield nntp.connect();
 
-            callback();
-          }
-        ], function (error) {
-          if (error) {
-            throw error;
-          }
-
-          done();
-        });
-      });
+      var response = yield nntp.authenticate();
+      assert.equal(response.status, 281);
+      assert.equal(response.message, 'Authentication accepted');
     });
 
-    it('should return a response when authentication with password is successful', function (done) {
+    it('should return a response when authentication with password is successful', function *() {
       var messages = [
         { request: 'AUTHINFO USER user\r\n', response: '381 Password needed' },
         { request: 'AUTHINFO PASS pass\r\n', response: '281 Authentication accepted' }
       ];
 
-      createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user', password: 'pass'});
+      yield createServer(messages);
 
-        async.waterfall([
-          function (callback) {
-            nntp.connect(callback);
-          },
-          function (response, callback) {
-            nntp.authenticate(callback);
-          },
-          function (response, callback) {
-            assert.equal(response.status, 281);
-            assert.equal(response.message, 'Authentication accepted');
+      var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user', password: 'pass'});
+      yield nntp.connect();
 
-            callback();
-          }
-        ], function (error) {
-          if (error) {
-            throw error;
-          }
-
-          done();
-        });
-      });
+      var response = yield nntp.authenticate();
+      assert.equal(response.status, 281);
+      assert.equal(response.message, 'Authentication accepted');
     });
 
-    it ('should return an error when authentication without a password', function (done) {
+    it ('should return an error when authentication without a password', function *() {
       var messages = [
         { request: 'AUTHINFO USER user\r\n', response: '381 Password needed' }
       ];
 
-      createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+      yield createServer(messages);
 
-        async.waterfall([
-          function (callback) {
-            nntp.connect(callback);
-          },
-          function (response, callback) {
-            nntp.authenticate(callback);
-          }
-        ], function (error) {
-          assert.notEqual(null, error);
-          assert.equal(error.message, 'Password is required');
-          done();
-        });
-      });
+      var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+      yield nntp.connect();
+
+      var catchedError;
+
+      try {
+        yield nntp.authenticate();
+      } catch (error) {
+        catchedError = error;
+      }
+
+      assert.notEqual(undefined, catchedError);
+      assert.equal(catchedError.message, 'Password is required');
     });
   });
 
   describe('#connectAndAuthenticate()', function () {
-    it('should return response when connect and authenticate is successful', function (done) {
+    it('should return response when connect and authenticate is successful', function *() {
       var messages = [
         { request: 'AUTHINFO USER user\r\n', response: '281 Authentication accepted' }
       ];
 
-      createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+      yield createServer(messages);
 
-        async.waterfall([
-          function (callback) {
-            nntp.connectAndAuthenticate(callback);
-          },
-          function (response, callback) {
-            assert.equal(response.status, 281);
-            assert.equal(response.message, 'Authentication accepted');
+      var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
 
-            callback();
-          }
-        ], function (error) {
-          if (error) {
-            throw error;
-          }
-
-          done();
-        });
-      });
+      var response = yield nntp.connectAndAuthenticate();
+      assert.equal(response.status, 281);
+      assert.equal(response.message, 'Authentication accepted');
     });
 
-    it('should only connect when no username is given', function (done) {
-      createServer([], function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000});
+    it('should only connect when no username is given', function *() {
+      yield createServer();
 
-        async.waterfall([
-          function (callback) {
-            nntp.connectAndAuthenticate(callback);
-          },
-          function (response, callback) {
-            assert.equal(response.status, 200);
-            assert.equal(response.message, 'server ready - posting allowed');
+      var nntp = new NNTP({host: 'localhost', port: 5000});
 
-            callback();
-          }
-        ], function (error) {
-          if (error) {
-            throw error;
-          }
-
-          done();
-        });
-      });
+      var response = yield nntp.connectAndAuthenticate();
+      assert.equal(response.status, 200);
+      assert.equal(response.message, 'server ready - posting allowed');
     });
   });
 
   describe('#xover()', function () {
-    it('should return messages as array', function (done) {
+    it('should return messages as array', function *() {
       var messages = [
         { request: 'XOVER 1-1\r\n', response: '224 compressed data follows\r\n123456789\tRe: Are you checking out NNTP?\trobinvdvleuten@example.com (\"Robin van der Vleuten\")\tSat,3 Aug 2013 13:19:22 -0000\t<nntp123456789@nntp>\t<nntp987654321@nntp>\t321\t123\tXref: nntp:123456789\r\n.\r\n' }
       ];
 
-      createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+      yield createServer(messages);
 
-        async.waterfall([
-          function (callback) {
-            nntp.connect(callback);
-          },
-          function (response, callback) {
-            var format = {
-              subject: false,
-              from: false,
-              date: false,
-              'message-id': false,
-              references: false,
-              bytes: false,
-              lines: false,
-              xref: true
-            };
+      var nntp = new NNTP({host: 'localhost', port: 5000});
+      yield nntp.connect();
 
-            nntp.xover('1-1', format, callback);
-          },
-          function (messages, callback) {
-            assert.equal(1, messages.length);
+      var format = {
+        subject: false,
+        from: false,
+        date: false,
+        'message-id': false,
+        references: false,
+        bytes: false,
+        lines: false,
+        xref: true
+      };
 
-            var message = messages.shift();
-            assert.equal('123456789', message.number);
-            assert.equal('Re: Are you checking out NNTP?', message.subject);
-            assert.equal('robinvdvleuten@example.com ("Robin van der Vleuten")', message.from);
-            assert.equal('Sat,3 Aug 2013 13:19:22 -0000', message.date);
-            assert.equal('<nntp123456789@nntp>', message['message-id']);
-            assert.equal('<nntp987654321@nntp>', message.references);
-            assert.equal('321', message.bytes);
-            assert.equal('123', message.lines);
-            assert.equal('nntp:123456789', message.xref);
+      var messages = yield nntp.xover('1-1', format);
+      assert.equal(1, messages.length);
 
-            callback();
-          }
-        ], function (error) {
-          if (error) {
-            throw error;
-          }
-
-          done();
-        });
-      });
+      var message = messages.shift();
+      assert.equal('123456789', message.number);
+      assert.equal('Re: Are you checking out NNTP?', message.subject);
+      assert.equal('robinvdvleuten@example.com ("Robin van der Vleuten")', message.from);
+      assert.equal('Sat,3 Aug 2013 13:19:22 -0000', message.date);
+      assert.equal('<nntp123456789@nntp>', message['message-id']);
+      assert.equal('<nntp987654321@nntp>', message.references);
+      assert.equal('321', message.bytes);
+      assert.equal('123', message.lines);
+      assert.equal('nntp:123456789', message.xref);
     });
   });
 
   describe('#xzver()', function () {
-    it('should correctly inflate received messages and return messages as array', function (done) {
-      zlib.deflate('123456789\tRe: Are you checking out NNTP?\trobinvdvleuten@example.com (\"Robin van der Vleuten\")\tSat,3 Aug 2013 13:19:22 -0000\t<nntp123456789@nntp>\t<nntp987654321@nntp>\t321\t123\tXref: nntp:123456789\r\n.\r\n', function (error, result) {
-        var messages = [
-          { request: 'XZVER 1-1\r\n', response: '224 compressed data follows\r\n' + result.toString('binary') }
-        ];
+    it('should correctly inflate received messages and return messages as array', function *() {
+      var result = yield thunkify(zlib.deflate)('123456789\tRe: Are you checking out NNTP?\trobinvdvleuten@example.com (\"Robin van der Vleuten\")\tSat,3 Aug 2013 13:19:22 -0000\t<nntp123456789@nntp>\t<nntp987654321@nntp>\t321\t123\tXref: nntp:123456789\r\n.\r\n');
 
-        createServer(messages, function () {
-          var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+      var messages = [
+        { request: 'XZVER 1-1\r\n', response: '224 compressed data follows\r\n' + result.toString('binary') }
+      ];
 
-          async.waterfall([
-            function (callback) {
-              nntp.connect(callback);
-            },
-            function (response, callback) {
-              var format = {
-                subject: false,
-                from: false,
-                date: false,
-                'message-id': false,
-                references: false,
-                bytes: false,
-                lines: false,
-                xref: true
-              };
+      yield createServer(messages);
 
-              nntp.xzver('1-1', format, callback);
-            },
-            function (messages, callback) {
-              assert.equal(1, messages.length);
+      var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+      yield nntp.connect();
 
-              var message = messages.shift();
-              assert.equal('123456789', message.number);
-              assert.equal('Re: Are you checking out NNTP?', message.subject);
-              assert.equal('robinvdvleuten@example.com ("Robin van der Vleuten")', message.from);
-              assert.equal('Sat,3 Aug 2013 13:19:22 -0000', message.date);
-              assert.equal('<nntp123456789@nntp>', message['message-id']);
-              assert.equal('<nntp987654321@nntp>', message.references);
-              assert.equal('321', message.bytes);
-              assert.equal('123', message.lines);
-              assert.equal('nntp:123456789', message.xref);
+      var format = {
+        subject: false,
+        from: false,
+        date: false,
+        'message-id': false,
+        references: false,
+        bytes: false,
+        lines: false,
+        xref: true
+      };
 
-              callback();
-            }
-          ], function (error) {
-            if (error) {
-              throw error;
-            }
+      var messages = yield nntp.xzver('1-1', format);
+      assert.equal(1, messages.length);
 
-            done();
-          });
-        });
-      });
+      var message = messages.shift();
+      assert.equal('123456789', message.number);
+      assert.equal('Re: Are you checking out NNTP?', message.subject);
+      assert.equal('robinvdvleuten@example.com ("Robin van der Vleuten")', message.from);
+      assert.equal('Sat,3 Aug 2013 13:19:22 -0000', message.date);
+      assert.equal('<nntp123456789@nntp>', message['message-id']);
+      assert.equal('<nntp987654321@nntp>', message.references);
+      assert.equal('321', message.bytes);
+      assert.equal('123', message.lines);
+      assert.equal('nntp:123456789', message.xref);
     });
   });
 });

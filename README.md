@@ -19,33 +19,18 @@ $ npm install node-nntp
 Here is an example that fetches 100 articles from the _php.doc_ of the _news.php.net_ server:
 
 ```javascript
-var async = require('async'),
+var co = require('co'),
     NNTP = require('node-nntp');
 
-var nntp = new NNTP({host: 'news.php.net', port: 119, secure: false}),
-    group,
-    format;
+co(function *() {
+  var nntp = new NNTP({host: 'news.php.net', port: 119, secure: false});
 
-async.waterfall([
-  function (callback) {
-    nntp.connect(callback);
-  },
-  function (response, callback) {
-    nntp.group('php.doc.nl', callback);
-  },
-  function (receivedGroup, callback) {
-    group = receivedGroup;
+  var response = yield nntp.connect(),
+      group = yield nntp.group('php.doc.nl'),
+      format = yield nntp.overviewFormat();
 
-    nntp.overviewFormat(callback);
-  },
-  function (receivedFormat, callback) {
-    format = receivedFormat;
-
-    nntp.xover(group.first + '-' + (parseInt(group.first, 10) + 100), format, callback);
-  }
-], function (error, messages) {
-  console.log(messages);
-});
+  var messages = yield nntp.xover(group.first + '-' + (parseInt(group.first, 10) + 100), format);
+})();
 ```
 
 ## License
