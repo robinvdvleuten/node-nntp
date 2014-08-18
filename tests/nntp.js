@@ -81,7 +81,11 @@ describe('NNTP', function () {
 
             callback();
           }
-        ], function () {
+        ], function (error) {
+          if (error) {
+            throw error;
+          }
+
           done();
         });
       });
@@ -109,7 +113,11 @@ describe('NNTP', function () {
 
             callback();
           }
-        ], function () {
+        ], function (error) {
+          if (error) {
+            throw error;
+          }
+
           done();
         });
       });
@@ -182,7 +190,11 @@ describe('NNTP', function () {
 
             callback();
           }
-        ], function () {
+        ], function (error) {
+          if (error) {
+            throw error;
+          }
+
           done();
         });
       });
@@ -233,7 +245,11 @@ describe('NNTP', function () {
 
               callback();
             }
-          ], function () {
+          ], function (error) {
+            if (error) {
+              throw error;
+            }
+
             done();
           });
         });
