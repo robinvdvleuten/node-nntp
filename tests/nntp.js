@@ -147,6 +147,60 @@ describe('NNTP', function () {
     });
   });
 
+  describe('#connectAndAuthenticate()', function () {
+    it('should return response when connect and authenticate is successful', function (done) {
+      var messages = [
+        { request: 'AUTHINFO USER user\r\n', response: '281 Authentication accepted' }
+      ];
+
+      createServer(messages, function () {
+        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+
+        async.waterfall([
+          function (callback) {
+            nntp.connectAndAuthenticate(callback);
+          },
+          function (response, callback) {
+            assert.equal(response.status, 281);
+            assert.equal(response.message, 'Authentication accepted');
+
+            callback();
+          }
+        ], function (error) {
+          if (error) {
+            throw error;
+          }
+
+          done();
+        });
+      });
+    });
+
+    it('should only connect when no username is given', function (done) {
+      createServer([], function () {
+        var nntp = new NNTP({host: 'localhost', port: 5000});
+
+        async.waterfall([
+          function (callback) {
+            nntp.connectAndAuthenticate(callback);
+          },
+          function (response, callback) {
+            assert.equal(response.status, 200);
+            assert.equal(response.message, 'server ready - posting allowed');
+
+            callback();
+          }
+        ], function (error) {
+          if (error) {
+            throw error;
+          }
+
+          done();
+        });
+      });
+    });
+  });
+
   describe('#xover()', function () {
     it('should return messages as array', function (done) {
       var messages = [
