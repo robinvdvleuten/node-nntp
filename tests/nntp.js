@@ -2,7 +2,6 @@
 
 var assert = require('assert'),
     net = require('net'),
-    async = require('async'),
     zlib = require('zlib'),
     thunkify = require('thunkify'),
     NNTP = require('../lib/nntp'),

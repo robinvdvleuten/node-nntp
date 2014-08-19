@@ -24,9 +24,6 @@
   "bugs": {
     "url": "https://github.com/RobinVdVleuten/node-nntp/issues"
   },
-  "engines": {
-    "node": ">= 0.10.0"
-  },
   "dependencies": {
     "xtend": "~4.0"
   },
@@ -39,7 +36,7 @@
   "main": "./lib/nntp.js",
   "scripts": {
     "prepublish": "npm prune",
-    "test": "mocha --harmony --require co-mocha --reporter=dot --check-leaks tests",
-    "test-travis": "istanbul cover node_modules/mocha/bin/_mocha --harmony --require co-mocha --reporter=dot --check-leaks tests"
+    "test": "NODE_ENV=test mocha --harmony --require co-mocha --reporter=dot --check-leaks tests",
+    "test-travis": "NODE_ENV=test node --harmony node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --require co-mocha --reporter dot --check-leaks tests"
   }
 }
