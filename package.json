@@ -28,15 +28,13 @@
     "xtend": "~4.0"
   },
   "devDependencies": {
-    "co-mocha": "^1.0.0",
     "istanbul": "^0.2.10",
-    "mocha": "^1.16.2",
-    "thunkify": "^2.1.2"
+    "mocha": "^1.16.2"
   },
   "main": "./lib/nntp.js",
   "scripts": {
     "prepublish": "npm prune",
-    "test": "NODE_ENV=test mocha --harmony --require co-mocha --reporter=dot --check-leaks tests",
-    "test-travis": "NODE_ENV=test node --harmony node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --require co-mocha --reporter dot --check-leaks tests"
+    "test": "NODE_ENV=test mocha --reporter=dot --check-leaks tests",
+    "test-travis": "NODE_ENV=test node node_modules/.bin/istanbul cover ./node_modules/.bin/_mocha -- --reporter dot --check-leaks tests"
   }
 }
