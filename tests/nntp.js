@@ -6,6 +6,8 @@ var assert = require('assert'),
     NNTP = require('../lib/nntp'),
     server;
 
+var PORT = 3000;
+
 function createServer(messages, callback) {
   if (typeof messages === 'function') {
     callback = messages;
@@ -24,23 +26,21 @@ function createServer(messages, callback) {
 
       connection.on('data', function (data) {
         data = data.toString('utf8');
-
         message = messages.shift();
         assert.equal(message.request, data);
-
         connection.write(new Buffer(message.response, 'binary'));
       });
     }
   });
 
-  server.listen(5000, callback);
+  server.listen(PORT, callback);
 }
 
 describe('NNTP', function () {
   describe('#connect()', function () {
     it('should return a response when connection is successful', function (done) {
       createServer(function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000});
+        var nntp = new NNTP({host: 'localhost', port: PORT});
 
         nntp.connect(function (error, response) {
           assert.equal(null, error);
@@ -58,7 +58,7 @@ describe('NNTP', function () {
 
         nntp.connect(function (error, response) {
           assert.notEqual(null, error);
-          assert.equal(error.message, 'connect ECONNREFUSED');
+          assert.equal(error.message.indexOf('connect ECONNREFUSED'), 0);
           assert.equal(null, response);
 
           done();
@@ -74,7 +74,7 @@ describe('NNTP', function () {
       ];
 
       createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+        var nntp = new NNTP({host: 'localhost', port: PORT, username: 'user'});
 
         nntp.connect(function (error, response) {
           nntp.authenticate(function (error, response) {
@@ -95,7 +95,7 @@ describe('NNTP', function () {
       ];
 
       createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user', password: 'pass'});
+        var nntp = new NNTP({host: 'localhost', port: PORT, username: 'user', password: 'pass'});
 
         nntp.connect(function (error, response) {
           nntp.authenticate(function (error, response) {
@@ -115,7 +115,7 @@ describe('NNTP', function () {
       ];
 
       createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+        var nntp = new NNTP({host: 'localhost', port: PORT, username: 'user'});
 
         nntp.connect(function (error, response) {
           nntp.authenticate(function (error, response) {
@@ -137,7 +137,7 @@ describe('NNTP', function () {
       ];
 
       createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+        var nntp = new NNTP({host: 'localhost', port: PORT, username: 'user'});
 
         nntp.connectAndAuthenticate(function (error, response) {
           assert.equal(null, error);
@@ -151,7 +151,7 @@ describe('NNTP', function () {
 
     it('should only connect when no username is given', function (done) {
       createServer(function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000});
+        var nntp = new NNTP({host: 'localhost', port: PORT});
 
         nntp.connectAndAuthenticate(function (error, response) {
           assert.equal(null, error);
@@ -171,7 +171,7 @@ describe('NNTP', function () {
       ];
 
       createServer(messages, function () {
-        var nntp = new NNTP({host: 'localhost', port: 5000});
+        var nntp = new NNTP({host: 'localhost', port: PORT});
 
         nntp.connect(function (error, response) {
           var format = {
@@ -214,7 +214,7 @@ describe('NNTP', function () {
         ];
 
         createServer(messages, function () {
-          var nntp = new NNTP({host: 'localhost', port: 5000, username: 'user'});
+          var nntp = new NNTP({host: 'localhost', port: PORT, username: 'user'});
 
           nntp.connect(function (error, response) {
             var format = {
@@ -244,6 +244,27 @@ describe('NNTP', function () {
 
               done();
             });
+          });
+        });
+      });
+    });
+  });
+
+  describe('#article()', function(){
+    it('should retrieve an article', function(done){
+      var messages = [ {
+        request: 'ARTICLE <nntp123456789@nntp>\r\n',
+        response: '220 1 <nntp1234567890@nntp>\r\nNewsgroups: alt.test\r\nDate: 6 Oct 1998 04:38:40 -0500\r\nMessage-ID: <nntp1234567890@nntp>\r\n\r\ntest\r\n.\r\n'
+      } ];
+      createServer(messages, function () {
+        var nntp = new NNTP({host: 'localhost', port: PORT, username: 'user'});
+
+        nntp.connect(function (error, response) {
+          nntp.article('<nntp123456789@nntp>', function (error, article) {
+            assert(article.headers.length > 0);
+            assert(article.body.length > 0);
+            assert.equal(article.body[0], 'test');
+            done();
           });
         });
       });
