@@ -1,6 +1,6 @@
 {
   "name": "node-nntp",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "A client for connecting with a NNTP server.",
   "keywords": [
     "nntp",
@@ -14,6 +14,11 @@
       "name": "Robin van der Vleuten",
       "email": "robinvdvleuten@gmail.com",
       "web": "http://robinvdvleuten.nl"
+    },
+    {
+      "name": "Matthew Page",
+      "email": "matthewnpage@gmail.com",
+      "web": "https://github.com/mattpage"
     }
   ],
   "license": "MIT",
